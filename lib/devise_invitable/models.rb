@@ -32,8 +32,10 @@ module Devise
         include ::DeviseInvitable::Inviter
         belongs_to_options = if Devise.invited_by_class_name
           { class_name: Devise.invited_by_class_name }
-        else
+        elsif !ancestors.map(&:to_s).include?("NoBrainer::Document")
           { polymorphic: true }
+        else
+          {}
         end
         if fk = Devise.invited_by_foreign_key
           belongs_to_options[:foreign_key] = fk
@@ -231,7 +233,7 @@ module Devise
       def add_taken_error(key)
         errors.add(key, :taken)
       end
-    
+
       def invitation_taken?
         !invited_to_sign_up?
       end
@@ -310,7 +312,7 @@ module Devise
 
           invitable = find_or_initialize_with_errors(invite_key_array, attributes_hash)
           invitable.assign_attributes(attributes)
-          invitable.invited_by = invited_by
+          invitable.invited_by_id = invited_by.id
           unless invitable.password || invitable.encrypted_password.present?
             invitable.password = random_password
           end
